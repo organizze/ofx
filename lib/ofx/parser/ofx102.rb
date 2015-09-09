@@ -6,9 +6,9 @@ module OFX
       ACCOUNT_TYPES = {
         "CHECKING" => :checking
       }
-      
+
       TRANSACTION_TYPES = [
-        'ATM', 'CASH', 'CHECK', 'CREDIT', 'DEBIT', 'DEP', 'DIRECTDEBIT', 'DIRECTDEP', 'DIV', 
+        'ATM', 'CASH', 'CHECK', 'CREDIT', 'DEBIT', 'DEP', 'DIRECTDEBIT', 'DIRECTDEP', 'DIV',
         'FEE', 'INT', 'OTHER', 'PAYMENT', 'POS', 'REPEATPMT', 'SRVCHG', 'XFER'
       ].inject({}) { |hash, tran_type| hash[tran_type] = tran_type.downcase.to_sym; hash }
 
@@ -111,22 +111,26 @@ module OFX
 
       def build_balance
         amount = html.search("ledgerbal > balamt").inner_text.to_f
+        date_str = html.search("ledgerbal > dtasof").inner_text
+        date = build_date(date_str) rescue nil
 
         OFX::Balance.new({
           :amount => amount,
           :amount_in_pennies => (amount * 100).to_i,
-          :posted_at => build_date(html.search("ledgerbal > dtasof").inner_text)
+          :posted_at => date
         })
       end
 
       def build_available_balance
         if html.search("availbal").size > 0
           amount = html.search("availbal > balamt").inner_text.to_f
+          date_str = html.search("availbal > dtasof").inner_text
+          date = build_date(date_str) rescue nil
 
           OFX::Balance.new({
             :amount => amount,
             :amount_in_pennies => (amount * 100).to_i,
-            :posted_at => build_date(html.search("availbal > dtasof").inner_text)
+            :posted_at => date
           })
         else
           return nil
