@@ -136,6 +136,19 @@ module OFX
           return nil
         end
       end
+
+      def sanitize_brazilian_currency(string)
+        string = if string.match(/\d,\d{3}/)
+          string.to_s.delete(',')
+        else
+          string.to_s.gsub(',', '.')
+        end
+        if account.bank_id == '5467' #citibank
+          string = (string.to_f / 100.0).to_s
+        end
+        string
+      end
+
     end
   end
 end
