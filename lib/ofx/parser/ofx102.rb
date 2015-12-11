@@ -78,7 +78,7 @@ module OFX
 
       def build_transaction(element)
         OFX::Transaction.new({
-          :amount            => build_amount(element),
+          :amount            => build_amount(element).to_f,
           :amount_in_pennies => (build_amount(element) * 100).to_i,
           :fit_id            => element.search("fitid").inner_text,
           :memo              => element.search("memo").inner_text,
@@ -97,7 +97,7 @@ module OFX
       end
 
       def build_amount(element)
-        BigDecimal.new(element.search("trnamt").inner_text)
+        BigDecimal.new(sanitize_brazilian_currency(element.search("trnamt").inner_text))
       end
 
       def build_date(date)
@@ -110,7 +110,7 @@ module OFX
       end
 
       def build_balance
-        amount = html.search("ledgerbal > balamt").inner_text.to_f
+        amount = sanitize_brazilian_currency(html.search("ledgerbal > balamt").inner_text).to_f
         date_str = html.search("ledgerbal > dtasof").inner_text
         date = build_date(date_str) rescue nil
 
@@ -143,10 +143,14 @@ module OFX
         else
           string.to_s.gsub(',', '.')
         end
-        if account.bank_id == '5467' #citibank
+        if bank_id == '5467' #citibank
           string = (string.to_f / 100.0).to_s
         end
         string
+      end
+
+      def bank_id
+        html.search("bankacctfrom > bankid").inner_text
       end
 
     end
