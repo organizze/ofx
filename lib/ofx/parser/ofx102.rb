@@ -49,6 +49,7 @@ module OFX
       end
 
       private
+
       def build_account
         OFX::Account.new({
           :bank_id           => html.search("bankacctfrom > bankid").inner_text,
@@ -57,8 +58,7 @@ module OFX
           :transactions      => build_transactions,
           :balance           => build_balance,
           :available_balance => build_available_balance,
-          :currency          => html.search("bankmsgsrsv1 > stmttrnrs > stmtrs > curdef, " +
-                                            "creditcardmsgsrsv1 > ccstmttrnrs > ccstmtrs > curdef").inner_text
+          :currency          => html.search("bankmsgsrsv1 > stmttrnrs > stmtrs > curdef, creditcardmsgsrsv1 > ccstmttrnrs > ccstmtrs > curdef").inner_text
         })
       end
 
@@ -101,12 +101,14 @@ module OFX
       end
 
       def build_date(date)
-        _, year, month, day, hour, minutes, seconds = *date.match(/(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(\d{2}))?/)
-
-        date = "#{year}-#{month}-#{day} "
-        date << "#{hour}:#{minutes}:#{seconds}" if hour && minutes && seconds
-
-        Time.parse(date)
+        if intermedium_crazy_ofx?
+          Date.strptime(date, '%d/%m/%Y') # Brazilian date formatted.
+        else
+          _, year, month, day, hour, minutes, seconds = *date.match(/(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(\d{2}))?/)
+          date = "#{year}-#{month}-#{day} "
+          date << "#{hour}:#{minutes}:#{seconds}" if hour && minutes && seconds
+          Time.parse(date)
+        end
       end
 
       def build_balance
@@ -138,6 +140,7 @@ module OFX
       end
 
       def sanitize_brazilian_currency(string)
+        string.gsub!(/[^\d\,\.\-]/, '') # removing any non-numeric symbols
         string = if string.match(/\d,\d{3}/)
           string.to_s.delete(',')
         else
@@ -150,7 +153,15 @@ module OFX
       end
 
       def bank_id
-        html.search("bankacctfrom > bankid").inner_text
+        @bank_id ||= html.search("bankacctfrom > bankid").inner_text
+      end
+
+      def currency
+        @currency ||= html.search("bankmsgsrsv1 > stmttrnrs > stmtrs > curdef, creditcardmsgsrsv1 > ccstmttrnrs > ccstmtrs > curdef").inner_text
+      end
+
+      def intermedium_crazy_ofx?
+        (bank_id == "077") && (currency == "BRL")
       end
 
     end
