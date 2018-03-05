@@ -58,7 +58,7 @@ module OFX
           :transactions      => build_transactions,
           :balance           => build_balance,
           :available_balance => build_available_balance,
-          :currency          => html.search("bankmsgsrsv1 > stmttrnrs > stmtrs > curdef, creditcardmsgsrsv1 > ccstmttrnrs > ccstmtrs > curdef").inner_text
+          :currency          => currency
         })
       end
 
