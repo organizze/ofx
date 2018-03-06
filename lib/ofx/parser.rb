@@ -16,6 +16,8 @@ module OFX
           raise OFX::UnsupportedFileError
         end
 
+        raise(OFX::UnsupportedFileError) if headers.nil?
+
         case headers["VERSION"]
         when /102|103/ then
           @parser = OFX102.new(:headers => headers, :body => body)
