@@ -101,7 +101,7 @@ module OFX
       end
 
       def build_date(date)
-        if intermedium_crazy_ofx?
+        if date_formatted_as_brazilians?(date)
           Date.strptime(date, '%d/%m/%Y') # Brazilian date formatted.
         else
           _, year, month, day, hour, minutes, seconds = *date.match(/(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(\d{2}))?/)
@@ -160,8 +160,8 @@ module OFX
         @currency ||= html.search("bankmsgsrsv1 > stmttrnrs > stmtrs > curdef, creditcardmsgsrsv1 > ccstmttrnrs > ccstmtrs > curdef").inner_text
       end
 
-      def intermedium_crazy_ofx?
-        (bank_id == "077") && (currency == "BRL")
+      def date_formatted_as_brazilians?(date)
+        (currency == "BRL") && date.match(/\d{2}\/\d{2}\/\d{4}/).present?
       end
 
     end
