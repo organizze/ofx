@@ -146,9 +146,10 @@ module OFX
         else
           string.to_s.gsub(',', '.')
         end
-        sign = string.match("/-/").nil? ? '+' : '-'
-        string.gsub!("-","")
-        string = "#{sign}#{string}"
+        if string.match(/\.\-/) # fixing ".-50" style formmat on Nubank OFX
+          string.gsub!("-","")
+          string = "-#{string}"
+        end
         if bank_id == '5467' #citibank
           string = (string.to_f / 100.0).to_s
         end
