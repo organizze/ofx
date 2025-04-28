@@ -97,7 +97,11 @@ module OFX
       end
 
       def build_amount(element)
-        BigDecimal.new(sanitize_brazilian_currency(element.search("trnamt").inner_text))
+        if BigDecimal.respond_to?(:new)
+          BigDecimal.new(sanitize_brazilian_currency(element.search("trnamt").inner_text))
+        else
+          BigDecimal(sanitize_brazilian_currency(element.search("trnamt").inner_text))
+        end
       end
 
       def build_date(date)
